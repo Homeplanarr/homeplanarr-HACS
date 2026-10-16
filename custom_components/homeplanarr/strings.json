@@ -9,7 +9,7 @@
           "api_key": "API key"
         },
         "data_description": {
-          "url": "Your Homeplanarr address, https://homeplanarr.com unless you run your own."
+          "url": "Your Homeplanarr address. Keep the default unless you run your own."
         }
       },
       "entities": {

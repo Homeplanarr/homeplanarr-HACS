@@ -9,7 +9,7 @@
           "api_key": "API-nyckel"
         },
         "data_description": {
-          "url": "Din Homeplanarr-adress, https://homeplanarr.com om du inte kör en egen."
+          "url": "Din Homeplanarr-adress. Behåll standardvärdet om du inte kör en egen."
         }
       },
       "entities": {
