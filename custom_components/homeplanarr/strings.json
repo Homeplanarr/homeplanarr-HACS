@@ -1,0 +1,161 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Homeplanarr",
+        "description": "Create a household API key in Homeplanarr under Household → API access (full access) and paste it here.",
+        "data": {
+          "url": "Address",
+          "api_key": "API key"
+        },
+        "data_description": {
+          "url": "Your Homeplanarr address. Keep the default unless you run your own."
+        }
+      },
+      "entities": {
+        "title": "What to send",
+        "description": "You can change this later under Configure.",
+        "data": {
+          "energy_entities": "Electricity meters (kWh, total)",
+          "energy_interval": "Send electricity every",
+          "water_entities": "Water meters",
+          "solar_entities": "Solar production meters (kWh)",
+          "level_entities": "Indoor sensors (temperature, humidity, CO2, radon)",
+          "battery_entities": "Battery levels (smoke and leak detectors...)",
+          "forward_tags": "Forward NFC tag scans to Homeplanarr chores"
+        },
+        "data_description": {
+          "energy_entities": "Meters that count kWh and only go up. Pick every meter in the house; the integration sums them itself, no helper or utility meter needed. Send electricity from one place only (not also via Tibber).",
+          "energy_interval": "Each finished period is sent with its start time, so it is priced against the right hour.",
+          "water_entities": "Total meters; the use per hour is sent in litres.",
+          "solar_entities": "Total production meters; the production per hour is sent.",
+          "level_entities": "The current value is sent once an hour. The entity's area is matched to a room with the same name.",
+          "battery_entities": "Shown under Integrations with a low-battery warning.",
+          "forward_tags": "Tags registered in Homeplanarr complete their chore. Other tags are ignored."
+        }
+      },
+      "reauth_confirm": {
+        "title": "New API key",
+        "description": "Homeplanarr no longer accepts the key. Create a new one under Household → API access.",
+        "data": {
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The key was not accepted. Use a full-access household key that has not expired.",
+      "no_subscription": "The household has no active subscription.",
+      "cannot_connect": "Could not reach Homeplanarr at that address."
+    },
+    "abort": {
+      "already_configured": "That Homeplanarr address is already set up.",
+      "reauth_successful": "The new key works."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "What to send",
+        "description": "You can change this later under Configure.",
+        "data": {
+          "energy_entities": "Electricity meters (kWh, total)",
+          "energy_interval": "Send electricity every",
+          "water_entities": "Water meters",
+          "solar_entities": "Solar production meters (kWh)",
+          "level_entities": "Indoor sensors (temperature, humidity, CO2, radon)",
+          "battery_entities": "Battery levels (smoke and leak detectors...)",
+          "forward_tags": "Forward NFC tag scans to Homeplanarr chores"
+        },
+        "data_description": {
+          "energy_entities": "Meters that count kWh and only go up. Pick every meter in the house; the integration sums them itself, no helper or utility meter needed. Send electricity from one place only (not also via Tibber).",
+          "energy_interval": "Each finished period is sent with its start time, so it is priced against the right hour.",
+          "water_entities": "Total meters; the use per hour is sent in litres.",
+          "solar_entities": "Total production meters; the production per hour is sent.",
+          "level_entities": "The current value is sent once an hour. The entity's area is matched to a room with the same name.",
+          "battery_entities": "Shown under Integrations with a low-battery warning.",
+          "forward_tags": "Tags registered in Homeplanarr complete their chore. Other tags are ignored."
+        }
+      }
+    }
+  },
+  "selector": {
+    "energy_interval": {
+      "options": {
+        "15": "15 minutes",
+        "60": "hour"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "monthly_cost_total": {
+        "name": "Monthly cost"
+      },
+      "energy_month_kwh": {
+        "name": "Electricity this month"
+      },
+      "energy_month_cost": {
+        "name": "Electricity cost this month"
+      },
+      "water_month_l": {
+        "name": "Water this month"
+      },
+      "solar_month_kwh": {
+        "name": "Solar this month"
+      },
+      "chores_due": {
+        "name": "Chores due"
+      },
+      "chores_overdue": {
+        "name": "Chores overdue"
+      },
+      "next_chore": {
+        "name": "Next chore"
+      },
+      "leader_name": {
+        "name": "Chore leader this month"
+      },
+      "next_renewal_name": {
+        "name": "Next contract renewal"
+      },
+      "cheapest_3h_start": {
+        "name": "Cheapest 3 hours start"
+      },
+      "low_battery_devices": {
+        "name": "Devices with low battery"
+      },
+      "silent_sensors": {
+        "name": "Silent sensors"
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Shopping list"
+      }
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Complete chore",
+      "description": "Marks a Homeplanarr chore as done and gives the member its points.",
+      "fields": {
+        "chore": {
+          "name": "Chore",
+          "description": "Chore name (any case) or id."
+        },
+        "member": {
+          "name": "Member",
+          "description": "Member name or id."
+        },
+        "comment": {
+          "name": "Comment",
+          "description": "Shown in the activity feed."
+        },
+        "config_entry_id": {
+          "name": "Household",
+          "description": "Only needed with more than one Homeplanarr set up."
+        }
+      }
+    }
+  }
+}

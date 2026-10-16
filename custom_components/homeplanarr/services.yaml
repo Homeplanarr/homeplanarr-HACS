@@ -1,0 +1,20 @@
+complete_chore:
+  fields:
+    chore:
+      required: true
+      example: "Take out trash"
+      selector:
+        text:
+    member:
+      required: true
+      example: "Alice"
+      selector:
+        text:
+    comment:
+      example: "via Home Assistant"
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: homeplanarr
