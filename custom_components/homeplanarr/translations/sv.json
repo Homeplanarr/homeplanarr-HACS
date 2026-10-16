@@ -1,0 +1,161 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Homeplanarr",
+        "description": "Skapa en API-nyckel i Homeplanarr under Hushåll → API-åtkomst (full åtkomst) och klistra in den här.",
+        "data": {
+          "url": "Adress",
+          "api_key": "API-nyckel"
+        },
+        "data_description": {
+          "url": "Din Homeplanarr-adress, https://homeplanarr.com om du inte kör en egen."
+        }
+      },
+      "entities": {
+        "title": "Vad som ska skickas",
+        "description": "Du kan ändra detta senare under Konfigurera.",
+        "data": {
+          "energy_entities": "Elmätare (kWh, totalt)",
+          "energy_interval": "Skicka el var",
+          "water_entities": "Vattenmätare",
+          "solar_entities": "Solcellsproduktion (kWh)",
+          "level_entities": "Inomhussensorer (temperatur, luftfuktighet, CO2, radon)",
+          "battery_entities": "Batterinivåer (brandvarnare, läckagelarm...)",
+          "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr"
+        },
+        "data_description": {
+          "energy_entities": "Mätare som räknar kWh och bara går uppåt. Välj alla mätare i huset, integrationen summerar dem själv, du behöver ingen hjälpare eller utility meter. Skicka el från ett ställe (inte också via Tibber).",
+          "energy_interval": "Varje färdig period skickas med sin starttid, så den prissätts mot rätt timme.",
+          "water_entities": "Totalmätare, förbrukningen per timme skickas i liter.",
+          "solar_entities": "Totalmätare för produktion, produktionen per timme skickas.",
+          "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
+          "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
+          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Ny API-nyckel",
+        "description": "Homeplanarr godtar inte längre nyckeln. Skapa en ny under Hushåll → API-åtkomst.",
+        "data": {
+          "api_key": "API-nyckel"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Nyckeln godtogs inte. Använd en hushållsnyckel med full åtkomst som inte har gått ut.",
+      "no_subscription": "Hushållet har ingen aktiv prenumeration.",
+      "cannot_connect": "Kunde inte nå Homeplanarr på den adressen."
+    },
+    "abort": {
+      "already_configured": "Den Homeplanarr-adressen är redan inlagd.",
+      "reauth_successful": "Den nya nyckeln fungerar."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vad som ska skickas",
+        "description": "Du kan ändra detta senare under Konfigurera.",
+        "data": {
+          "energy_entities": "Elmätare (kWh, totalt)",
+          "energy_interval": "Skicka el var",
+          "water_entities": "Vattenmätare",
+          "solar_entities": "Solcellsproduktion (kWh)",
+          "level_entities": "Inomhussensorer (temperatur, luftfuktighet, CO2, radon)",
+          "battery_entities": "Batterinivåer (brandvarnare, läckagelarm...)",
+          "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr"
+        },
+        "data_description": {
+          "energy_entities": "Mätare som räknar kWh och bara går uppåt. Välj alla mätare i huset, integrationen summerar dem själv, du behöver ingen hjälpare eller utility meter. Skicka el från ett ställe (inte också via Tibber).",
+          "energy_interval": "Varje färdig period skickas med sin starttid, så den prissätts mot rätt timme.",
+          "water_entities": "Totalmätare, förbrukningen per timme skickas i liter.",
+          "solar_entities": "Totalmätare för produktion, produktionen per timme skickas.",
+          "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
+          "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
+          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras."
+        }
+      }
+    }
+  },
+  "selector": {
+    "energy_interval": {
+      "options": {
+        "15": "15 minuter",
+        "60": "timme"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "monthly_cost_total": {
+        "name": "Månadskostnad"
+      },
+      "energy_month_kwh": {
+        "name": "El denna månad"
+      },
+      "energy_month_cost": {
+        "name": "Elkostnad denna månad"
+      },
+      "water_month_l": {
+        "name": "Vatten denna månad"
+      },
+      "solar_month_kwh": {
+        "name": "Solel denna månad"
+      },
+      "chores_due": {
+        "name": "Sysslor att göra"
+      },
+      "chores_overdue": {
+        "name": "Försenade sysslor"
+      },
+      "next_chore": {
+        "name": "Nästa syssla"
+      },
+      "leader_name": {
+        "name": "Ledare denna månad"
+      },
+      "next_renewal_name": {
+        "name": "Nästa avtalsförnyelse"
+      },
+      "cheapest_3h_start": {
+        "name": "Billigaste 3 timmarna börjar"
+      },
+      "low_battery_devices": {
+        "name": "Enheter med lågt batteri"
+      },
+      "silent_sensors": {
+        "name": "Tysta sensorer"
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Inköpslista"
+      }
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Bocka av syssla",
+      "description": "Markerar en syssla i Homeplanarr som gjord och ger medlemmen poängen.",
+      "fields": {
+        "chore": {
+          "name": "Syssla",
+          "description": "Sysslans namn (oavsett versaler) eller id."
+        },
+        "member": {
+          "name": "Medlem",
+          "description": "Medlemmens namn eller id."
+        },
+        "comment": {
+          "name": "Kommentar",
+          "description": "Visas i aktivitetsflödet."
+        },
+        "config_entry_id": {
+          "name": "Hushåll",
+          "description": "Behövs bara om fler än ett Homeplanarr är inlagt."
+        }
+      }
+    }
+  }
+}
