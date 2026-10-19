@@ -8,7 +8,8 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_URL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -19,6 +20,7 @@ from .const import (
     CONF_ENERGY_INTERVAL,
     CONF_FORWARD_TAGS,
     CONF_LEVEL_ENTITIES,
+    CONF_SHOPPING_LIST,
     CONF_SOLAR_ENTITIES,
     CONF_WATER_ENTITIES,
     DEFAULT_ENERGY_INTERVAL,
@@ -66,8 +68,22 @@ def entities_schema(current: Mapping[str, Any]) -> vol.Schema:
             vol.Optional(
                 CONF_FORWARD_TAGS, **default(CONF_FORWARD_TAGS, False)
             ): selector.BooleanSelector(),
+            # suggested, not default: a default comes back when the field is cleared
+            vol.Optional(
+                CONF_SHOPPING_LIST,
+                description={"suggested_value": current.get(CONF_SHOPPING_LIST)},
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="todo")),
         }
     )
+
+
+def entities_errors(hass: HomeAssistant, user_input: Mapping[str, Any]) -> dict[str, str]:
+    target = user_input.get(CONF_SHOPPING_LIST)
+    if target:
+        entity = er.async_get(hass).async_get(target)
+        if entity is not None and entity.platform == DOMAIN:
+            return {CONF_SHOPPING_LIST: "own_list"}
+    return {}
 
 
 async def _validate(hass, url: str, api_key: str) -> str | None:
@@ -129,9 +145,16 @@ class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_entities(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="Homeplanarr", data=self._data, options=user_input)
-        return self.async_show_form(step_id="entities", data_schema=entities_schema({}))
+            errors = entities_errors(self.hass, user_input)
+            if not errors:
+                return self.async_create_entry(
+                    title="Homeplanarr", data=self._data, options=user_input
+                )
+        return self.async_show_form(
+            step_id="entities", data_schema=entities_schema(user_input or {}), errors=errors
+        )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
         return await self.async_step_reauth_confirm()
@@ -171,8 +194,13 @@ class HomeplanarrOptionsFlow(OptionsFlow):
     """Change which entities are sent."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            errors = entities_errors(self.hass, user_input)
+            if not errors:
+                return self.async_create_entry(data=user_input)
         return self.async_show_form(
-            step_id="init", data_schema=entities_schema(self.config_entry.options)
+            step_id="init",
+            data_schema=entities_schema(user_input or self.config_entry.options),
+            errors=errors,
         )

@@ -12,6 +12,8 @@ CONF_SOLAR_ENTITIES = "solar_entities"
 CONF_LEVEL_ENTITIES = "level_entities"
 CONF_BATTERY_ENTITIES = "battery_entities"
 CONF_FORWARD_TAGS = "forward_tags"
+# An existing HA to-do list to sync the shopping list with; unset = our own list.
+CONF_SHOPPING_LIST = "shopping_list"
 
 DEFAULT_ENERGY_INTERVAL = "15"
 ENERGY_INTERVALS = ["15", "60"]

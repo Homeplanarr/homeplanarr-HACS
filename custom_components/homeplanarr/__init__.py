@@ -15,9 +15,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .api import HomeplanarrApi, HomeplanarrError
-from .const import DOMAIN, SERVICE_COMPLETE_CHORE
+from .const import CONF_SHOPPING_LIST, DOMAIN, SERVICE_COMPLETE_CHORE
 from .coordinator import HomeplanarrCoordinator, ShoppingCoordinator
 from .pusher import Pusher
+from .shopping_mirror import ShoppingMirror, store_for
 
 PLATFORMS = [Platform.SENSOR, Platform.TODO]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -43,6 +44,7 @@ class HomeplanarrData:
     coordinator: HomeplanarrCoordinator
     shopping: ShoppingCoordinator
     pusher: Pusher
+    mirror: ShoppingMirror | None = None
 
 
 type HomeplanarrConfigEntry = ConfigEntry[HomeplanarrData]
@@ -94,6 +96,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeplanarrConfigEntry) 
     entry.async_on_unload(pusher.async_stop)
     entry.async_on_unload(entry.add_update_listener(_reload_on_change))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if target := entry.options.get(CONF_SHOPPING_LIST):
+        mirror = ShoppingMirror(hass, entry.entry_id, api, target)
+        entry.runtime_data.mirror = mirror
+        entry.async_on_unload(mirror.async_stop)
+        await mirror.async_start()
     return True
 
 
@@ -103,3 +110,7 @@ async def _reload_on_change(hass: HomeAssistant, entry: HomeplanarrConfigEntry) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomeplanarrConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HomeplanarrConfigEntry) -> None:
+    await store_for(hass, entry.entry_id).async_remove()

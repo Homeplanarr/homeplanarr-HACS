@@ -22,7 +22,8 @@
           "solar_entities": "Solcellsproduktion (kWh)",
           "level_entities": "Inomhussensorer (temperatur, luftfuktighet, CO2, radon)",
           "battery_entities": "Batterinivåer (brandvarnare, läckagelarm...)",
-          "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr"
+          "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr",
+          "shopping_list": "Synka inköpslistan med en befintlig lista (valfritt)"
         },
         "data_description": {
           "energy_entities": "Mätare som räknar kWh och bara går uppåt. Välj alla mätare i huset, integrationen summerar dem själv, du behöver ingen hjälpare eller utility meter. Skicka el från ett ställe (inte också via Tibber).",
@@ -31,7 +32,8 @@
           "solar_entities": "Totalmätare för produktion, produktionen per timme skickas.",
           "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
           "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
-          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras."
+          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras.",
+          "shopping_list": "Välj en att göra-lista du redan använder, till exempel Inköpslista eller Google Keep, så hålls Homeplanarrs inköpslista i takt med den i stället för att en egen lista läggs till. Det som redan står på den läggs till i Homeplanarr. Lämna tomt för Homeplanarrs egen lista."
         }
       },
       "reauth_confirm": {
@@ -45,7 +47,8 @@
     "error": {
       "invalid_auth": "Nyckeln godtogs inte. Använd en hushållsnyckel med full åtkomst som inte har gått ut.",
       "no_subscription": "Hushållet har ingen aktiv prenumeration.",
-      "cannot_connect": "Kunde inte nå Homeplanarr på den adressen."
+      "cannot_connect": "Kunde inte nå Homeplanarr på den adressen.",
+      "own_list": "Välj en annan lista än Homeplanarrs egen."
     },
     "abort": {
       "already_configured": "Den Homeplanarr-adressen är redan inlagd.",
@@ -64,7 +67,8 @@
           "solar_entities": "Solcellsproduktion (kWh)",
           "level_entities": "Inomhussensorer (temperatur, luftfuktighet, CO2, radon)",
           "battery_entities": "Batterinivåer (brandvarnare, läckagelarm...)",
-          "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr"
+          "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr",
+          "shopping_list": "Synka inköpslistan med en befintlig lista (valfritt)"
         },
         "data_description": {
           "energy_entities": "Mätare som räknar kWh och bara går uppåt. Välj alla mätare i huset, integrationen summerar dem själv, du behöver ingen hjälpare eller utility meter. Skicka el från ett ställe (inte också via Tibber).",
@@ -73,9 +77,13 @@
           "solar_entities": "Totalmätare för produktion, produktionen per timme skickas.",
           "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
           "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
-          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras."
+          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras.",
+          "shopping_list": "Välj en att göra-lista du redan använder, till exempel Inköpslista eller Google Keep, så hålls Homeplanarrs inköpslista i takt med den i stället för att en egen lista läggs till. Det som redan står på den läggs till i Homeplanarr. Lämna tomt för Homeplanarrs egen lista."
         }
       }
+    },
+    "error": {
+      "own_list": "Välj en annan lista än Homeplanarrs egen."
     }
   },
   "selector": {
