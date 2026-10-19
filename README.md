@@ -91,3 +91,9 @@ name or id, for buttons, voice assistants and automations.
       target:
         entity_id: switch.dishwasher
 ```
+
+## Releasing
+
+Bump `version` in `custom_components/homeplanarr/manifest.json`, merge, then push
+a matching tag (`git tag v0.2.0 && git push origin v0.2.0`). The Release
+workflow publishes the GitHub release, which is what HACS offers as an update.
