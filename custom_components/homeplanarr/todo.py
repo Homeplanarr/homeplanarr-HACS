@@ -18,13 +18,14 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HomeplanarrConfigEntry
 from .api import HomeplanarrError, HomeplanarrRequestError
-from .const import DOMAIN
+from .const import CONF_SHOPPING_LIST, DOMAIN
 from .coordinator import ShoppingCoordinator
 
 
@@ -33,7 +34,17 @@ async def async_setup_entry(
     entry: HomeplanarrConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    if entry.options.get(CONF_SHOPPING_LIST):
+        # synced with a list the user already has (shopping_mirror.py): no list of our own
+        registry = er.async_get(hass)
+        if entity_id := registry.async_get_entity_id("todo", DOMAIN, _unique_id(entry.entry_id)):
+            registry.async_remove(entity_id)
+        return
     async_add_entities([ShoppingListEntity(entry.runtime_data.shopping, entry.entry_id)])
+
+
+def _unique_id(entry_id: str) -> str:
+    return f"{entry_id}_shopping_list"
 
 
 def _to_item(row: dict[str, Any]) -> TodoItem:
@@ -60,7 +71,7 @@ class ShoppingListEntity(CoordinatorEntity[ShoppingCoordinator], TodoListEntity)
 
     def __init__(self, coordinator: ShoppingCoordinator, entry_id: str) -> None:
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry_id}_shopping_list"
+        self._attr_unique_id = _unique_id(entry_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             name="Homeplanarr",

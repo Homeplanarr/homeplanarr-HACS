@@ -30,6 +30,15 @@ ticking off or removing an item in HA changes it in Homeplanarr straight away,
 and changes made in the app show up in HA within a minute. The quantity is the
 item's description.
 
+Already have a to-do list you use for shopping (HA's Shopping list, Local To-do,
+Google Keep...)? Pick it under *Configure → Sync the shopping list with an
+existing list*. Homeplanarr then keeps that list in step instead of adding its
+own: items with the same name are paired rather than doubled, items only on your
+list are added to Homeplanarr, and when both sides changed the same item since
+the last sync, Homeplanarr's version wins. Lists without descriptions (like HA's
+Shopping list) keep the quantity in Homeplanarr only. Clear the field to go back
+to `todo.homeplanarr_shopping_list`.
+
 **Action** `homeplanarr.complete_chore` marks a chore as done for a member, by
 name or id, for buttons, voice assistants and automations.
 
