@@ -1,10 +1,15 @@
 name: Release
 
-# Push a tag like v0.2.0 (matching "version" in manifest.json) and this
-# publishes the GitHub release that HACS offers as an update.
+# Bump "version" in manifest.json and merge: this publishes the GitHub
+# release vX.Y.Z that HACS offers as an update. A version that already has a
+# release is left alone, so other changes to main publish nothing.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths:
+      - custom_components/homeplanarr/manifest.json
+      - .github/workflows/release.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,14 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Tag matches manifest version
-        run: |
-          version=$(jq -r .version custom_components/homeplanarr/manifest.json)
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match manifest version $version"
-            exit 1
-          fi
-      - name: Create release
+      - name: Create the release for the manifest version
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+        run: |
+          tag="v$(jq -r .version custom_components/homeplanarr/manifest.json)"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag is already released"
+            exit 0
+          fi
+          gh release create "$tag" --target "$GITHUB_SHA" --generate-notes --title "$tag"
