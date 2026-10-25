@@ -33,7 +33,8 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.helpers.event import async_call_later, async_track_utc_time_change
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
@@ -146,6 +147,10 @@ class MeterTracker:
         ]
 
 
+# Seconds after HA has started before current values are first sent.
+FIRST_PUSH_DELAY = 60
+
+
 class Pusher:
     """Schedules and sends the pushes for one config entry."""
 
@@ -220,11 +225,21 @@ class Pusher:
             )
         await self._save()
         # Indoor sensors, batteries and odometers are current values: send them
-        # now, so a sensor just picked shows up without waiting for the hour.
+        # soon, so a sensor just picked shows up without waiting for the hour.
+        # Not straight away: at startup Bluetooth and cloud sensors (Airthings,
+        # cars) have no value yet, so wait for HA to have started, then a minute.
         if self._list(CONF_LEVEL_ENTITIES) or self._list(CONF_BATTERY_ENTITIES) or self._odometers:
-            self.entry.async_create_background_task(
-                self.hass, self._send_current(), f"{DOMAIN} first push"
-            )
+            self._unsubs.append(async_at_started(self.hass, self._on_started))
+
+    @callback
+    def _on_started(self, _hass: HomeAssistant) -> None:
+        self._unsubs.append(async_call_later(self.hass, FIRST_PUSH_DELAY, self._first_push))
+
+    @callback
+    def _first_push(self, _now: datetime) -> None:
+        self.entry.async_create_background_task(
+            self.hass, self._send_current(), f"{DOMAIN} first push"
+        )
 
     async def _send_current(self) -> None:
         self._pending_metrics = (self._pending_metrics + self._level_readings(dt_util.utcnow()))[
