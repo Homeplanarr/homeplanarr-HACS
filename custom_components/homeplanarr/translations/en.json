@@ -22,6 +22,7 @@
           "solar_entities": "Solar production meters (kWh)",
           "level_entities": "Indoor sensors (temperature, humidity, CO2, radon)",
           "battery_entities": "Battery levels (smoke and leak detectors...)",
+          "odometer_entities": "Car odometers",
           "forward_tags": "Forward NFC tag scans to Homeplanarr chores",
           "shopping_list": "Sync the shopping list with an existing list (optional)"
         },
@@ -32,6 +33,7 @@
           "solar_entities": "Total production meters; the production per hour is sent.",
           "level_entities": "The current value is sent once an hour. The entity's area is matched to a room with the same name.",
           "battery_entities": "Shown under Integrations with a low-battery warning.",
+          "odometer_entities": "If your car is in Home Assistant, pick its odometer sensor. Next you pick which vehicle in Homeplanarr it belongs to; the reading goes to the vehicle's log once a day.",
           "forward_tags": "Tags registered in Homeplanarr complete their chore. Other tags are ignored.",
           "shopping_list": "Pick a to-do list you already use, such as Shopping list or Google Keep, and Homeplanarr's shopping list is kept in step with it instead of adding a list of its own. Items already on it are added to Homeplanarr. Leave empty for Homeplanarr's own list."
         }
@@ -42,13 +44,18 @@
         "data": {
           "api_key": "API key"
         }
+      },
+      "vehicles": {
+        "title": "Which vehicle?",
+        "description": "Pick the vehicle in Homeplanarr each odometer belongs to. Add vehicles under Vehicles in Homeplanarr."
       }
     },
     "error": {
       "invalid_auth": "The key was not accepted. Use a full-access household key that has not expired.",
       "no_subscription": "The household has no active subscription.",
       "cannot_connect": "Could not reach Homeplanarr at that address.",
-      "own_list": "Pick another list than Homeplanarr's own."
+      "own_list": "Pick another list than Homeplanarr's own.",
+      "no_vehicles": "Homeplanarr has no vehicles yet. Add the car under Vehicles first."
     },
     "abort": {
       "already_configured": "That Homeplanarr address is already set up.",
@@ -67,6 +74,7 @@
           "solar_entities": "Solar production meters (kWh)",
           "level_entities": "Indoor sensors (temperature, humidity, CO2, radon)",
           "battery_entities": "Battery levels (smoke and leak detectors...)",
+          "odometer_entities": "Car odometers",
           "forward_tags": "Forward NFC tag scans to Homeplanarr chores",
           "shopping_list": "Sync the shopping list with an existing list (optional)"
         },
@@ -77,13 +85,20 @@
           "solar_entities": "Total production meters; the production per hour is sent.",
           "level_entities": "The current value is sent once an hour. The entity's area is matched to a room with the same name.",
           "battery_entities": "Shown under Integrations with a low-battery warning.",
+          "odometer_entities": "If your car is in Home Assistant, pick its odometer sensor. Next you pick which vehicle in Homeplanarr it belongs to; the reading goes to the vehicle's log once a day.",
           "forward_tags": "Tags registered in Homeplanarr complete their chore. Other tags are ignored.",
           "shopping_list": "Pick a to-do list you already use, such as Shopping list or Google Keep, and Homeplanarr's shopping list is kept in step with it instead of adding a list of its own. Items already on it are added to Homeplanarr. Leave empty for Homeplanarr's own list."
         }
+      },
+      "vehicles": {
+        "title": "Which vehicle?",
+        "description": "Pick the vehicle in Homeplanarr each odometer belongs to. Add vehicles under Vehicles in Homeplanarr."
       }
     },
     "error": {
-      "own_list": "Pick another list than Homeplanarr's own."
+      "own_list": "Pick another list than Homeplanarr's own.",
+      "no_vehicles": "Homeplanarr has no vehicles yet. Add the car under Vehicles first.",
+      "cannot_connect": "Could not reach Homeplanarr at that address."
     }
   },
   "selector": {

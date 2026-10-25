@@ -44,6 +44,8 @@ from .const import (
     CONF_ENERGY_INTERVAL,
     CONF_FORWARD_TAGS,
     CONF_LEVEL_ENTITIES,
+    CONF_ODOMETER_ENTITIES,
+    CONF_ODOMETERS,
     CONF_SOLAR_ENTITIES,
     CONF_WATER_ENTITIES,
     DEFAULT_ENERGY_INTERVAL,
@@ -184,14 +186,17 @@ class Pusher:
                     self.hass, self._on_energy_tick, minute=marks, second=10
                 )
             )
-        if any(
-            self._list(k)
-            for k in (
-                CONF_WATER_ENTITIES,
-                CONF_SOLAR_ENTITIES,
-                CONF_LEVEL_ENTITIES,
-                CONF_BATTERY_ENTITIES,
+        if (
+            any(
+                self._list(k)
+                for k in (
+                    CONF_WATER_ENTITIES,
+                    CONF_SOLAR_ENTITIES,
+                    CONF_LEVEL_ENTITIES,
+                    CONF_BATTERY_ENTITIES,
+                )
             )
+            or self._odometers
         ):
             self._unsubs.append(
                 async_track_utc_time_change(self.hass, self._on_hour_tick, minute=0, second=25)
@@ -213,6 +218,21 @@ class Pusher:
             self._meters.step(
                 floor_to(now, 60), self._meter_values(), timedelta(hours=1), set(meters)
             )
+        await self._save()
+        # Indoor sensors, batteries and odometers are current values: send them
+        # now, so a sensor just picked shows up without waiting for the hour.
+        if self._list(CONF_LEVEL_ENTITIES) or self._list(CONF_BATTERY_ENTITIES) or self._odometers:
+            self.entry.async_create_background_task(
+                self.hass, self._send_current(), f"{DOMAIN} first push"
+            )
+
+    async def _send_current(self) -> None:
+        self._pending_metrics = (self._pending_metrics + self._level_readings(dt_util.utcnow()))[
+            -MAX_PENDING * 5 :
+        ]
+        await self._send_metrics()
+        await self._send_devices()
+        await self._send_odometers()
         await self._save()
 
     @callback
@@ -376,6 +396,16 @@ class Pusher:
                         reading["room"] = room
                     readings.append(reading)
 
+        readings.extend(self._level_readings(now))
+
+        self._pending_metrics = (self._pending_metrics + readings)[-MAX_PENDING * 5 :]
+        await self._send_metrics()
+        await self._send_devices()
+        await self._send_odometers()
+        await self._save()
+
+    def _level_readings(self, now: datetime) -> list[dict[str, Any]]:
+        readings: list[dict[str, Any]] = []
         stamp = naive_local(now)
         for entity_id in self._list(CONF_LEVEL_ENTITIES):
             value = self._number(entity_id, None)
@@ -400,11 +430,7 @@ class Pusher:
             if room := self._room(entity_id):
                 reading["room"] = room
             readings.append(reading)
-
-        self._pending_metrics = (self._pending_metrics + readings)[-MAX_PENDING * 5 :]
-        await self._send_metrics()
-        await self._send_devices()
-        await self._save()
+        return readings
 
     async def _send_metrics(self) -> None:
         if not self._pending_metrics:
@@ -446,6 +472,36 @@ class Pusher:
                 return device.name_by_user or device.name
         state = self.hass.states.get(entity_id)
         return str(state.attributes.get(ATTR_FRIENDLY_NAME, entity_id)) if state else entity_id
+
+    # --- odometers --------------------------------------------------------------------
+
+    @property
+    def _odometers(self) -> dict[str, str]:
+        """{odometer entity: vehicle id} for the sensors that are still picked."""
+        picked = set(self._list(CONF_ODOMETER_ENTITIES))
+        return {
+            e: v for e, v in (self.options.get(CONF_ODOMETERS) or {}).items() if e in picked and v
+        }
+
+    async def _send_odometers(self) -> None:
+        readings = []
+        for entity_id, vehicle_id in self._odometers.items():
+            value = self._number(entity_id, None)
+            if value is None or value < 0:
+                continue
+            state = self.hass.states.get(entity_id)
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
+            reading: dict[str, Any] = {"vehicle_id": int(vehicle_id), "value": value}
+            if unit:
+                reading["unit"] = unit
+            readings.append(reading)
+        if not readings:
+            return
+        try:
+            # Homeplanarr keeps one entry a day and ignores unchanged values
+            await self.api.odometer(readings)
+        except HomeplanarrError as err:
+            _LOGGER.warning("Homeplanarr: odometer readings not sent: %s", err)
 
     # --- NFC tags ----------------------------------------------------------------------
 

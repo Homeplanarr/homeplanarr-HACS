@@ -86,6 +86,12 @@ class HomeplanarrApi:
     async def device_status(self, devices: list[dict[str, Any]]) -> Any:
         return await self._request("POST", f"{HA_PREFIX}/device-status", devices)
 
+    async def vehicles(self) -> list[dict[str, Any]]:
+        return await self._request("GET", f"{HA_PREFIX}/vehicles")
+
+    async def odometer(self, readings: list[dict[str, Any]]) -> Any:
+        return await self._request("POST", f"{HA_PREFIX}/odometer", readings)
+
     async def chore_event(self, chore: str, member: str, comment: str | None) -> Any:
         body: dict[str, Any] = {"chore": chore, "member": member}
         if comment:

@@ -164,8 +164,20 @@ async def test_list_without_descriptions(
     """HA's built-in Shopping list has no descriptions: the quantity stays in the app."""
     entry = MockConfigEntry(domain="shopping_list")
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    # it keeps its list in a file in the shared test config dir: start empty, write nothing
+    common = "homeassistant.components.shopping_list.common"
+    with (
+        patch(f"{common}.load_json_array", return_value=[]),
+        patch(f"{common}.save_json"),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        await _shopping_list_test_body(hass, api, freezer)
+
+
+async def _shopping_list_test_body(
+    hass: HomeAssistant, api, freezer: FrozenDateTimeFactory
+) -> None:
     target = "todo.shopping_list"
     api.shopping.return_value = [{"id": 1, "name": "Mjölk", "quantity": "2 l", "done": False}]
     await _setup(hass, {CONF_SHOPPING_LIST: target})
