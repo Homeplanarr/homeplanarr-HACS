@@ -20,6 +20,8 @@ from .const import (
     CONF_ENERGY_INTERVAL,
     CONF_FORWARD_TAGS,
     CONF_LEVEL_ENTITIES,
+    CONF_ODOMETER_ENTITIES,
+    CONF_ODOMETERS,
     CONF_SHOPPING_LIST,
     CONF_SOLAR_ENTITIES,
     CONF_WATER_ENTITIES,
@@ -65,6 +67,9 @@ def entities_schema(current: Mapping[str, Any]) -> vol.Schema:
             vol.Optional(CONF_BATTERY_ENTITIES, **default(CONF_BATTERY_ENTITIES, [])): _entities(
                 "battery"
             ),
+            vol.Optional(CONF_ODOMETER_ENTITIES, **default(CONF_ODOMETER_ENTITIES, [])): _entities(
+                "distance"
+            ),
             vol.Optional(
                 CONF_FORWARD_TAGS, **default(CONF_FORWARD_TAGS, False)
             ): selector.BooleanSelector(),
@@ -86,6 +91,41 @@ def entities_errors(hass: HomeAssistant, user_input: Mapping[str, Any]) -> dict[
     return {}
 
 
+def vehicles_schema(
+    entities: list[str], vehicles: list[dict[str, Any]], current: Mapping[str, Any]
+) -> vol.Schema:
+    """One vehicle picker per odometer sensor, keyed by the sensor's entity id."""
+    options = [
+        selector.SelectOptionDict(value=str(v["id"]), label=str(v["name"])) for v in vehicles
+    ]
+    ids = {o["value"] for o in options}
+    fields: dict[Any, Any] = {}
+    for entity_id in entities:
+        picked = str(current.get(entity_id) or "")
+        fields[
+            vol.Required(entity_id, default=picked if picked in ids else options[0]["value"])
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=options, mode=selector.SelectSelectorMode.DROPDOWN
+            )
+        )
+    return vol.Schema(fields)
+
+
+async def fetch_vehicles(
+    hass: HomeAssistant, url: str, api_key: str
+) -> tuple[list[dict[str, Any]], str | None]:
+    """The household's vehicles, or an error key for the odometer field."""
+    api = HomeplanarrApi(async_get_clientsession(hass), url, api_key)
+    try:
+        vehicles = await api.vehicles()
+    except HomeplanarrError:
+        return [], "cannot_connect"
+    if not vehicles:
+        return [], "no_vehicles"
+    return vehicles, None
+
+
 async def _validate(hass, url: str, api_key: str) -> str | None:
     """Return an error key, or None when the key works."""
     api = HomeplanarrApi(async_get_clientsession(hass), url, api_key)
@@ -102,8 +142,7 @@ async def _validate(hass, url: str, api_key: str) -> str | None:
 
 def _normalise_url(url: str) -> str:
     url = url.strip().rstrip("/")
-    if url.endswith("/app"):
-        url = url[: -len("/app")]
+    url = url.removesuffix("/app")
     if not url.startswith(("http://", "https://")):
         url = f"https://{url}"
     return url
@@ -114,6 +153,8 @@ class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
+        self._options: dict[str, Any] = {}
+        self._vehicles: list[dict[str, Any]] = []
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
@@ -148,12 +189,35 @@ class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             errors = entities_errors(self.hass, user_input)
+            if not errors and user_input.get(CONF_ODOMETER_ENTITIES):
+                self._vehicles, error = await fetch_vehicles(
+                    self.hass, self._data[CONF_URL], self._data[CONF_API_KEY]
+                )
+                if error:
+                    errors[CONF_ODOMETER_ENTITIES] = error
+                else:
+                    self._options = user_input
+                    return await self.async_step_vehicles()
             if not errors:
                 return self.async_create_entry(
                     title="Homeplanarr", data=self._data, options=user_input
                 )
         return self.async_show_form(
             step_id="entities", data_schema=entities_schema(user_input or {}), errors=errors
+        )
+
+    async def async_step_vehicles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        entities = self._options[CONF_ODOMETER_ENTITIES]
+        if user_input is not None:
+            return self.async_create_entry(
+                title="Homeplanarr",
+                data=self._data,
+                options={**self._options, CONF_ODOMETERS: dict(user_input)},
+            )
+        return self.async_show_form(
+            step_id="vehicles", data_schema=vehicles_schema(entities, self._vehicles, {})
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
@@ -193,14 +257,41 @@ class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
 class HomeplanarrOptionsFlow(OptionsFlow):
     """Change which entities are sent."""
 
+    def __init__(self) -> None:
+        self._options: dict[str, Any] = {}
+        self._vehicles: list[dict[str, Any]] = []
+
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             errors = entities_errors(self.hass, user_input)
+            if not errors and user_input.get(CONF_ODOMETER_ENTITIES):
+                data = self.config_entry.data
+                self._vehicles, error = await fetch_vehicles(
+                    self.hass, data[CONF_URL], data[CONF_API_KEY]
+                )
+                if error:
+                    errors[CONF_ODOMETER_ENTITIES] = error
+                else:
+                    self._options = user_input
+                    return await self.async_step_vehicles()
             if not errors:
                 return self.async_create_entry(data=user_input)
         return self.async_show_form(
             step_id="init",
             data_schema=entities_schema(user_input or self.config_entry.options),
             errors=errors,
+        )
+
+    async def async_step_vehicles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        entities = self._options[CONF_ODOMETER_ENTITIES]
+        if user_input is not None:
+            return self.async_create_entry(data={**self._options, CONF_ODOMETERS: dict(user_input)})
+        return self.async_show_form(
+            step_id="vehicles",
+            data_schema=vehicles_schema(
+                entities, self._vehicles, self.config_entry.options.get(CONF_ODOMETERS) or {}
+            ),
         )

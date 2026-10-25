@@ -14,6 +14,10 @@ CONF_BATTERY_ENTITIES = "battery_entities"
 CONF_FORWARD_TAGS = "forward_tags"
 # An existing HA to-do list to sync the shopping list with; unset = our own list.
 CONF_SHOPPING_LIST = "shopping_list"
+# A car's odometer sensors, and which Homeplanarr vehicle each belongs to
+# ({entity_id: vehicle id as a string}).
+CONF_ODOMETER_ENTITIES = "odometer_entities"
+CONF_ODOMETERS = "odometers"
 
 DEFAULT_ENERGY_INTERVAL = "15"
 ENERGY_INTERVALS = ["15", "60"]

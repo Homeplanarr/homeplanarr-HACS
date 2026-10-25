@@ -25,6 +25,11 @@ SUMMARY = {
     "currency": "SEK",
 }
 
+VEHICLES = [
+    {"id": 7, "name": "Volvon", "kind": "car", "odometer_unit": "mil", "odometer": 1200},
+    {"id": 8, "name": "Husbilen", "kind": "motorhome", "odometer_unit": "km", "odometer": None},
+]
+
 API = "custom_components.homeplanarr.api.HomeplanarrApi"
 
 
@@ -37,6 +42,8 @@ def api():
         patch(f"{API}.metrics", AsyncMock(return_value={"stored": 1})) as metrics,
         patch(f"{API}.device_status", AsyncMock(return_value={"stored": 1})) as devices,
         patch(f"{API}.chore_event", AsyncMock(return_value={"id": 9, "points": 5})) as chore,
+        patch(f"{API}.vehicles", AsyncMock(return_value=VEHICLES)) as vehicles,
+        patch(f"{API}.odometer", AsyncMock(return_value={"stored": 1})) as odometer,
         patch(f"{API}.shopping_list", AsyncMock(return_value=[])) as shopping,
         patch(f"{API}.shopping_add", AsyncMock(return_value={"id": 3})) as shop_add,
         patch(f"{API}.shopping_update", AsyncMock(return_value={"id": 1})) as shop_update,
@@ -52,6 +59,8 @@ def api():
                 metrics=metrics,
                 devices=devices,
                 chore=chore,
+                vehicles=vehicles,
+                odometer=odometer,
                 shopping=shopping,
                 shop_add=shop_add,
                 shop_update=shop_update,

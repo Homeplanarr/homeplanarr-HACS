@@ -39,6 +39,12 @@ the last sync, Homeplanarr's version wins. Lists without descriptions (like HA's
 Shopping list) keep the quantity in Homeplanarr only. Clear the field to go back
 to `todo.homeplanarr_shopping_list`.
 
+**Car odometers:** if your car is in Home Assistant (Volvo, Tesla, Kia and so on),
+pick its odometer sensor under *Car odometers*, then the Homeplanarr vehicle it
+belongs to. The reading goes to the vehicle's log once a day, converted to the
+vehicle's unit (km or Swedish mil). Add the vehicle under *Vehicles* in
+Homeplanarr first.
+
 **Action** `homeplanarr.complete_chore` marks a chore as done for a member, by
 name or id, for buttons, voice assistants and automations.
 

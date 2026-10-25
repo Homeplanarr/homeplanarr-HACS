@@ -22,6 +22,7 @@
           "solar_entities": "Solcellsproduktion (kWh)",
           "level_entities": "Inomhussensorer (temperatur, luftfuktighet, CO2, radon)",
           "battery_entities": "Batterinivåer (brandvarnare, läckagelarm...)",
+          "odometer_entities": "Bilens mätarställning",
           "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr",
           "shopping_list": "Synka inköpslistan med en befintlig lista (valfritt)"
         },
@@ -32,6 +33,7 @@
           "solar_entities": "Totalmätare för produktion, produktionen per timme skickas.",
           "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
           "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
+          "odometer_entities": "Om bilen finns i Home Assistant, välj dess mätarställningssensor. Sedan väljer du vilket fordon i Homeplanarr den hör till; värdet hamnar i fordonets logg en gång om dagen.",
           "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras.",
           "shopping_list": "Välj en att göra-lista du redan använder, till exempel Inköpslista eller Google Keep, så hålls Homeplanarrs inköpslista i takt med den i stället för att en egen lista läggs till. Det som redan står på den läggs till i Homeplanarr. Lämna tomt för Homeplanarrs egen lista."
         }
@@ -42,13 +44,18 @@
         "data": {
           "api_key": "API-nyckel"
         }
+      },
+      "vehicles": {
+        "title": "Vilket fordon?",
+        "description": "Välj vilket fordon i Homeplanarr varje mätarställning hör till. Fordon läggs till under Fordon i Homeplanarr."
       }
     },
     "error": {
       "invalid_auth": "Nyckeln godtogs inte. Använd en hushållsnyckel med full åtkomst som inte har gått ut.",
       "no_subscription": "Hushållet har ingen aktiv prenumeration.",
       "cannot_connect": "Kunde inte nå Homeplanarr på den adressen.",
-      "own_list": "Välj en annan lista än Homeplanarrs egen."
+      "own_list": "Välj en annan lista än Homeplanarrs egen.",
+      "no_vehicles": "Homeplanarr har inga fordon än. Lägg först till bilen under Fordon."
     },
     "abort": {
       "already_configured": "Den Homeplanarr-adressen är redan inlagd.",
@@ -67,6 +74,7 @@
           "solar_entities": "Solcellsproduktion (kWh)",
           "level_entities": "Inomhussensorer (temperatur, luftfuktighet, CO2, radon)",
           "battery_entities": "Batterinivåer (brandvarnare, läckagelarm...)",
+          "odometer_entities": "Bilens mätarställning",
           "forward_tags": "Skicka NFC-taggskanningar till sysslor i Homeplanarr",
           "shopping_list": "Synka inköpslistan med en befintlig lista (valfritt)"
         },
@@ -77,13 +85,20 @@
           "solar_entities": "Totalmätare för produktion, produktionen per timme skickas.",
           "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
           "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
+          "odometer_entities": "Om bilen finns i Home Assistant, välj dess mätarställningssensor. Sedan väljer du vilket fordon i Homeplanarr den hör till; värdet hamnar i fordonets logg en gång om dagen.",
           "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras.",
           "shopping_list": "Välj en att göra-lista du redan använder, till exempel Inköpslista eller Google Keep, så hålls Homeplanarrs inköpslista i takt med den i stället för att en egen lista läggs till. Det som redan står på den läggs till i Homeplanarr. Lämna tomt för Homeplanarrs egen lista."
         }
+      },
+      "vehicles": {
+        "title": "Vilket fordon?",
+        "description": "Välj vilket fordon i Homeplanarr varje mätarställning hör till. Fordon läggs till under Fordon i Homeplanarr."
       }
     },
     "error": {
-      "own_list": "Välj en annan lista än Homeplanarrs egen."
+      "own_list": "Välj en annan lista än Homeplanarrs egen.",
+      "no_vehicles": "Homeplanarr har inga fordon än. Lägg först till bilen under Fordon.",
+      "cannot_connect": "Kunde inte nå Homeplanarr på den adressen."
     }
   },
   "selector": {
