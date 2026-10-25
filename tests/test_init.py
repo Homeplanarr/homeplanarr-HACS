@@ -192,8 +192,8 @@ async def test_hourly_metrics_and_batteries(
     await hass.async_block_till_done()
 
     # first hour is the baseline for water; levels go every hour
-    readings = api.metrics.call_args.args[0]
-    by_kind = {r["kind"]: r for r in readings}
+    # (the first send, a minute after start, may land in the same jump)
+    by_kind = {r["kind"]: r for c in api.metrics.call_args_list for r in c.args[0]}
     assert by_kind["temperature"]["value"] == 21.5
     assert by_kind["radon"]["value"] == 80
     assert by_kind["water"]["value"] == pytest.approx(150)
