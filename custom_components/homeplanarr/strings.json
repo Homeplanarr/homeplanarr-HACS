@@ -149,6 +149,12 @@
       },
       "silent_sensors": {
         "name": "Silent sensors"
+      },
+      "next_waste_pickup": {
+        "name": "Next waste pickup"
+      },
+      "chores_left": {
+        "name": "Chores left {person}"
       }
     },
     "todo": {
