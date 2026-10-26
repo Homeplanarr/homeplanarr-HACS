@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -49,6 +49,14 @@ def _local_ts(key: str) -> Callable[[dict[str, Any]], datetime | None]:
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=dt_util.get_default_time_zone())
         return parsed
+
+    return read
+
+
+def _date(key: str) -> Callable[[dict[str, Any]], date | None]:
+    def read(data: dict[str, Any]) -> date | None:
+        raw = data.get(key)
+        return dt_util.parse_date(str(raw)) if raw else None
 
     return read
 
@@ -128,6 +136,13 @@ SENSORS: tuple[HomeplanarrSensorDescription, ...] = (
         attrs=("cheapest_3h_end", "cheapest_3h_price"),
     ),
     HomeplanarrSensorDescription(
+        key="waste_next_date",
+        translation_key="next_waste_pickup",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=_date("waste_next_date"),
+        attrs=("waste_next_days", "waste_next_types", "waste_next_place", "waste_homes"),
+    ),
+    HomeplanarrSensorDescription(
         key="low_battery_devices",
         translation_key="low_battery_devices",
         state_class=SensorStateClass.MEASUREMENT,
@@ -148,6 +163,35 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.coordinator
     async_add_entities(HomeplanarrSensor(coordinator, entry.entry_id, d) for d in SENSORS)
 
+    # one "Chores left" sensor per person, added as people appear
+    known: set[int] = set()
+
+    def add_people() -> None:
+        new = [
+            p
+            for p in (coordinator.data or {}).get("chores_by_person") or []
+            if isinstance(p, dict) and isinstance(p.get("user_id"), int) and p["user_id"] not in known
+        ]
+        known.update(p["user_id"] for p in new)
+        if new:
+            async_add_entities(
+                ChoresLeftSensor(coordinator, entry.entry_id, p["user_id"], str(p.get("name") or p["user_id"]))
+                for p in new
+            )
+
+    add_people()
+    entry.async_on_unload(coordinator.async_add_listener(add_people))
+
+
+def _device(coordinator: HomeplanarrCoordinator, entry_id: str) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, entry_id)},
+        name="Homeplanarr",
+        manufacturer="Homeplanarr",
+        entry_type=DeviceEntryType.SERVICE,
+        configuration_url=coordinator.api.app_url,
+    )
+
 
 class HomeplanarrSensor(CoordinatorEntity[HomeplanarrCoordinator], SensorEntity):
     """One figure from the household summary."""
@@ -164,13 +208,7 @@ class HomeplanarrSensor(CoordinatorEntity[HomeplanarrCoordinator], SensorEntity)
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            name="Homeplanarr",
-            manufacturer="Homeplanarr",
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url=coordinator.api.app_url,
-        )
+        self._attr_device_info = _device(coordinator, entry_id)
 
     @property
     def native_value(self) -> Any:
@@ -191,3 +229,43 @@ class HomeplanarrSensor(CoordinatorEntity[HomeplanarrCoordinator], SensorEntity)
             return None
         data = self.coordinator.data or {}
         return {key: data.get(key) for key in self.entity_description.attrs}
+
+
+class ChoresLeftSensor(CoordinatorEntity[HomeplanarrCoordinator], SensorEntity):
+    """The chores assigned to one person that are due today or overdue."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chores_left"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, coordinator: HomeplanarrCoordinator, entry_id: str, user_id: int, name: str
+    ) -> None:
+        super().__init__(coordinator)
+        self._user_id = user_id
+        self._attr_unique_id = f"{entry_id}_chores_left_{user_id}"
+        self._attr_translation_placeholders = {"person": name}
+        self._attr_device_info = _device(coordinator, entry_id)
+
+    def _person(self) -> dict[str, Any] | None:
+        for p in (self.coordinator.data or {}).get("chores_by_person") or []:
+            if isinstance(p, dict) and p.get("user_id") == self._user_id:
+                return p
+        return None
+
+    @property
+    def available(self) -> bool:
+        # a person who left the household (or a key without chores) shows unavailable
+        return super().available and self._person() is not None
+
+    @property
+    def native_value(self) -> int | None:
+        person = self._person()
+        return person.get("open") if person else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        person = self._person()
+        if not person:
+            return None
+        return {"overdue": person.get("overdue"), "chores": person.get("chores") or []}

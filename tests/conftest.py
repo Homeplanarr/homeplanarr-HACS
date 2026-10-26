@@ -22,6 +22,15 @@ SUMMARY = {
     "cheapest_3h_start": "2026-10-16T02:00:00",
     "low_battery_devices": 0,
     "silent_sensors": 0,
+    "waste_next_date": "2026-10-28",
+    "waste_next_days": 2,
+    "waste_next_types": "Restavfall, Matavfall",
+    "waste_next_place": None,
+    "waste_homes": [{"property_id": 1, "name": "Villan", "date": "2026-10-28", "days": 2, "types": ["Restavfall", "Matavfall"], "place": None}],
+    "chores_by_person": [
+        {"user_id": 1, "name": "Alice", "open": 0, "overdue": 0, "chores": []},
+        {"user_id": 2, "name": "Bob", "open": 2, "overdue": 1, "chores": ["Disk", "Dammsuga"]},
+    ],
     "currency": "SEK",
 }
 

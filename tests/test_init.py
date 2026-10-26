@@ -80,6 +80,30 @@ async def test_sensors(hass: HomeAssistant, api) -> None:
     )
 
 
+async def test_waste_and_chores_per_person(hass: HomeAssistant, api) -> None:
+    entry = await _setup(hass, {})
+    waste = hass.states.get("sensor.homeplanarr_next_waste_pickup")
+    assert waste is not None, [s.entity_id for s in hass.states.async_all()]
+    assert waste.state == "2026-10-28"
+    assert waste.attributes["waste_next_types"] == "Restavfall, Matavfall"
+    assert waste.attributes["waste_homes"][0]["name"] == "Villan"
+    bob = hass.states.get("sensor.homeplanarr_chores_left_bob")
+    assert bob is not None, [s.entity_id for s in hass.states.async_all()]
+    assert bob.state == "2"
+    assert bob.attributes["chores"] == ["Disk", "Dammsuga"]
+    assert hass.states.get("sensor.homeplanarr_chores_left_alice").state == "0"
+
+    # a new person gets a sensor on the next poll; one who left goes unavailable
+    api.sensors.return_value = {
+        **api.sensors.return_value,
+        "chores_by_person": [{"user_id": 3, "name": "Cleo", "open": 1, "overdue": 0, "chores": ["Bädda"]}],
+    }
+    await entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.homeplanarr_chores_left_cleo").state == "1"
+    assert hass.states.get("sensor.homeplanarr_chores_left_bob").state == "unavailable"
+
+
 async def test_auth_failure_starts_reauth(hass: HomeAssistant, api) -> None:
     api.sensors.side_effect = HomeplanarrAuthError("revoked")
     entry = MockConfigEntry(

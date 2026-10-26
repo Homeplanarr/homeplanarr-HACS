@@ -149,6 +149,12 @@
       },
       "silent_sensors": {
         "name": "Tysta sensorer"
+      },
+      "next_waste_pickup": {
+        "name": "Nästa sophämtning"
+      },
+      "chores_left": {
+        "name": "Sysslor kvar {person}"
       }
     },
     "todo": {

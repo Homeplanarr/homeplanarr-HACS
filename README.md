@@ -23,6 +23,9 @@ from the help page.
 Sensors for monthly cost, electricity, water and solar this month, chores due and
 overdue, next chore, the month's chore leader, the next contract renewal, the
 start of the cheapest three hours, devices with low battery and silent sensors.
+**Next waste pickup** (a date; attributes: days left, the bins, and each home's
+next pickup) and one **Chores left** sensor per person (the chores assigned to
+them that are due today or overdue; attributes: overdue count and the chores).
 
 **Shopping list:** the household's shopping list is a to-do list in Home
 Assistant (`todo.homeplanarr_shopping_list`), synced both ways. Adding, renaming,
@@ -96,6 +99,43 @@ name or id, for buttons, voice assistants and automations.
     - action: switch.turn_on
       target:
         entity_id: switch.dishwasher
+```
+
+## Example: put the bins out
+
+```yaml
+- alias: "Bins out tonight"
+  triggers:
+    - trigger: time
+      at: "19:00:00"
+  conditions:
+    - condition: numeric_state
+      entity_id: sensor.homeplanarr_next_waste_pickup
+      attribute: waste_next_days
+      below: 2
+      above: 0
+  actions:
+    - action: notify.notify
+      data:
+        message: "Put out the bins: {{ state_attr('sensor.homeplanarr_next_waste_pickup', 'waste_next_types') }}"
+```
+
+## Example: TV only when the chores are done
+
+```yaml
+- alias: "Kids' TV after chores"
+  triggers:
+    - trigger: state
+      entity_id: media_player.kids_tv
+      to: "on"
+  conditions:
+    - condition: numeric_state
+      entity_id: sensor.homeplanarr_chores_left_alice
+      above: 0
+  actions:
+    - action: media_player.turn_off
+      target:
+        entity_id: media_player.kids_tv
 ```
 
 ## Releasing
