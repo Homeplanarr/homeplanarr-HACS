@@ -16,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import HomeplanarrApi, HomeplanarrAuthError, HomeplanarrBillingError, HomeplanarrError
 from .const import (
     CONF_BATTERY_ENTITIES,
+    CONF_MEMBERS,
     CONF_ENERGY_ENTITIES,
     CONF_ENERGY_INTERVAL,
     CONF_FORWARD_TAGS,
@@ -29,6 +30,15 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     ENERGY_INTERVALS,
+)
+from .mapping import (
+    ha_tags,
+    ha_users,
+    linked_chores,
+    members_from_input,
+    members_schema,
+    save_tags,
+    tags_schema,
 )
 
 
@@ -148,13 +158,134 @@ def _normalise_url(url: str) -> str:
     return url
 
 
-class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
+class _Steps:
+    """The steps after "What to send", shared by setup and Configure: pair odometers
+    with vehicles, HA's tags with chores and HA's people with members."""
+
+    hass: HomeAssistant
+
+    def _init_steps(self) -> None:
+        self._options: dict[str, Any] = {}
+        self._vehicles: list[dict[str, Any]] = []
+        self._chores: list[dict[str, Any]] = []
+        self._members: list[dict[str, Any]] = []
+        self._remote_tags: list[dict[str, Any]] = []
+        self._tags: dict[str, str] = {}
+        self._users: dict[str, str] = {}
+
+    def _connection(self) -> tuple[str, str]:
+        raise NotImplementedError
+
+    def _current(self) -> Mapping[str, Any]:
+        """The options saved before this flow (empty during setup)."""
+        return {}
+
+    def _finish(self) -> ConfigFlowResult:
+        raise NotImplementedError
+
+    def _api(self) -> HomeplanarrApi:
+        url, api_key = self._connection()
+        return HomeplanarrApi(async_get_clientsession(self.hass), url, api_key)
+
+    async def _accept_entities(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Fetch what the next steps need; an error key per field, or none."""
+        errors = entities_errors(self.hass, user_input)
+        if errors:
+            return errors
+        if user_input.get(CONF_ODOMETER_ENTITIES):
+            url, api_key = self._connection()
+            self._vehicles, error = await fetch_vehicles(self.hass, url, api_key)
+            if error:
+                return {CONF_ODOMETER_ENTITIES: error}
+        if user_input.get(CONF_FORWARD_TAGS):
+            api = self._api()
+            try:
+                self._chores = await api.chores()
+                self._members = await api.members()
+                self._remote_tags = await api.nfc_tags()
+            except HomeplanarrError:
+                return {CONF_FORWARD_TAGS: "cannot_connect"}
+            self._tags = ha_tags(self.hass)
+            self._users = await ha_users(self.hass)
+        self._options = dict(user_input)
+        if CONF_MEMBERS in self._current():
+            self._options[CONF_MEMBERS] = dict(self._current()[CONF_MEMBERS])
+        return {}
+
+    async def _next(self, after: str | None = None) -> ConfigFlowResult:
+        steps = ["vehicles", "tags", "members"]
+        for step in steps[steps.index(after) + 1 if after else 0 :]:
+            if step == "vehicles" and self._options.get(CONF_ODOMETER_ENTITIES):
+                return await self.async_step_vehicles()
+            if not self._options.get(CONF_FORWARD_TAGS):
+                continue
+            if step == "tags" and self._tags and self._chores:
+                return await self.async_step_tags()
+            if step == "members" and self._users and self._members:
+                return await self.async_step_members()
+        return self._finish()
+
+    async def async_step_vehicles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            self._options[CONF_ODOMETERS] = dict(user_input)
+            return await self._next("vehicles")
+        return self.async_show_form(  # type: ignore[attr-defined]
+            step_id="vehicles",
+            data_schema=vehicles_schema(
+                self._options[CONF_ODOMETER_ENTITIES],
+                self._vehicles,
+                self._current().get(CONF_ODOMETERS) or {},
+            ),
+        )
+
+    async def async_step_tags(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await save_tags(self._api(), self._tags, user_input, self._remote_tags)
+            except HomeplanarrError:
+                errors["base"] = "cannot_connect"
+            else:
+                return await self._next("tags")
+        preset = (
+            linked_chores(self._remote_tags)
+            if user_input is None
+            else {self._tags[k]: v for k, v in user_input.items() if k in self._tags}
+        )
+        return self.async_show_form(  # type: ignore[attr-defined]
+            step_id="tags",
+            data_schema=tags_schema(self._tags, self._chores, preset),
+            errors=errors,
+        )
+
+    async def async_step_members(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            self._options[CONF_MEMBERS] = members_from_input(self._users, user_input)
+            return await self._next("members")
+        return self.async_show_form(  # type: ignore[attr-defined]
+            step_id="members",
+            data_schema=members_schema(
+                self._users, self._members, self._options.get(CONF_MEMBERS) or {}
+            ),
+        )
+
+
+class HomeplanarrConfigFlow(_Steps, ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
-        self._options: dict[str, Any] = {}
-        self._vehicles: list[dict[str, Any]] = []
+        self._init_steps()
+
+    def _connection(self) -> tuple[str, str]:
+        return self._data[CONF_URL], self._data[CONF_API_KEY]
+
+    def _finish(self) -> ConfigFlowResult:
+        return self.async_create_entry(title="Homeplanarr", data=self._data, options=self._options)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
@@ -188,36 +319,11 @@ class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = entities_errors(self.hass, user_input)
-            if not errors and user_input.get(CONF_ODOMETER_ENTITIES):
-                self._vehicles, error = await fetch_vehicles(
-                    self.hass, self._data[CONF_URL], self._data[CONF_API_KEY]
-                )
-                if error:
-                    errors[CONF_ODOMETER_ENTITIES] = error
-                else:
-                    self._options = user_input
-                    return await self.async_step_vehicles()
+            errors = await self._accept_entities(user_input)
             if not errors:
-                return self.async_create_entry(
-                    title="Homeplanarr", data=self._data, options=user_input
-                )
+                return await self._next()
         return self.async_show_form(
             step_id="entities", data_schema=entities_schema(user_input or {}), errors=errors
-        )
-
-    async def async_step_vehicles(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        entities = self._options[CONF_ODOMETER_ENTITIES]
-        if user_input is not None:
-            return self.async_create_entry(
-                title="Homeplanarr",
-                data=self._data,
-                options={**self._options, CONF_ODOMETERS: dict(user_input)},
-            )
-        return self.async_show_form(
-            step_id="vehicles", data_schema=vehicles_schema(entities, self._vehicles, {})
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
@@ -254,44 +360,30 @@ class HomeplanarrConfigFlow(ConfigFlow, domain=DOMAIN):
         return HomeplanarrOptionsFlow()
 
 
-class HomeplanarrOptionsFlow(OptionsFlow):
-    """Change which entities are sent."""
+class HomeplanarrOptionsFlow(_Steps, OptionsFlow):
+    """Change which entities are sent, and the pairings."""
 
     def __init__(self) -> None:
-        self._options: dict[str, Any] = {}
-        self._vehicles: list[dict[str, Any]] = []
+        self._init_steps()
+
+    def _connection(self) -> tuple[str, str]:
+        data = self.config_entry.data
+        return data[CONF_URL], data[CONF_API_KEY]
+
+    def _current(self) -> Mapping[str, Any]:
+        return self.config_entry.options
+
+    def _finish(self) -> ConfigFlowResult:
+        return self.async_create_entry(data=self._options)
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = entities_errors(self.hass, user_input)
-            if not errors and user_input.get(CONF_ODOMETER_ENTITIES):
-                data = self.config_entry.data
-                self._vehicles, error = await fetch_vehicles(
-                    self.hass, data[CONF_URL], data[CONF_API_KEY]
-                )
-                if error:
-                    errors[CONF_ODOMETER_ENTITIES] = error
-                else:
-                    self._options = user_input
-                    return await self.async_step_vehicles()
+            errors = await self._accept_entities(user_input)
             if not errors:
-                return self.async_create_entry(data=user_input)
+                return await self._next()
         return self.async_show_form(
             step_id="init",
             data_schema=entities_schema(user_input or self.config_entry.options),
             errors=errors,
-        )
-
-    async def async_step_vehicles(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        entities = self._options[CONF_ODOMETER_ENTITIES]
-        if user_input is not None:
-            return self.async_create_entry(data={**self._options, CONF_ODOMETERS: dict(user_input)})
-        return self.async_show_form(
-            step_id="vehicles",
-            data_schema=vehicles_schema(
-                entities, self._vehicles, self.config_entry.options.get(CONF_ODOMETERS) or {}
-            ),
         )

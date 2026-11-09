@@ -34,6 +34,19 @@ SUMMARY = {
     "currency": "SEK",
 }
 
+CHORES = [
+    {"id": 3, "name": "Ta ut soporna", "active": True},
+    {"id": 4, "name": "Dammsuga", "active": True},
+]
+
+MEMBERS = [
+    {"id": 1, "name": "Alice Svensson"},
+    {"id": 2, "name": "Bob"},
+]
+
+# Homeplanarr's own NFC tags: one HA tag already linked to a chore
+NFC_TAGS = [{"id": 11, "tag_id": "tag-kitchen", "name": "Köket", "chore_id": 4, "user_id": None}]
+
 VEHICLES = [
     {"id": 7, "name": "Volvon", "kind": "car", "odometer_unit": "mil", "odometer": 1200},
     {"id": 8, "name": "Husbilen", "kind": "motorhome", "odometer_unit": "km", "odometer": None},
@@ -53,6 +66,12 @@ def api():
         patch(f"{API}.chore_event", AsyncMock(return_value={"id": 9, "points": 5})) as chore,
         patch(f"{API}.vehicles", AsyncMock(return_value=VEHICLES)) as vehicles,
         patch(f"{API}.odometer", AsyncMock(return_value={"stored": 1})) as odometer,
+        patch(f"{API}.chores", AsyncMock(return_value=CHORES)) as chores,
+        patch(f"{API}.members", AsyncMock(return_value=MEMBERS)) as members,
+        patch(f"{API}.nfc_tags", AsyncMock(return_value=NFC_TAGS)) as nfc_tags,
+        patch(f"{API}.nfc_tag_create", AsyncMock(return_value={"id": 12})) as tag_create,
+        patch(f"{API}.nfc_tag_update", AsyncMock(return_value={"id": 11})) as tag_update,
+        patch(f"{API}.nfc_scan", AsyncMock(return_value={"id": 5})) as nfc_scan,
         patch(f"{API}.shopping_list", AsyncMock(return_value=[])) as shopping,
         patch(f"{API}.shopping_add", AsyncMock(return_value={"id": 3})) as shop_add,
         patch(f"{API}.shopping_update", AsyncMock(return_value={"id": 1})) as shop_update,
@@ -74,5 +93,11 @@ def api():
                 shop_add=shop_add,
                 shop_update=shop_update,
                 shop_delete=shop_delete,
+                chores=chores,
+                members=members,
+                nfc_tags=nfc_tags,
+                tag_create=tag_create,
+                tag_update=tag_update,
+                nfc_scan=nfc_scan,
             ),
         )

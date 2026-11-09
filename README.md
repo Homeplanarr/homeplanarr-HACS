@@ -16,7 +16,10 @@ from the help page.
 - **Batteries:** smoke and leak detectors and other battery sensors, shown under
   Integrations with a low-battery warning.
 - **NFC tags (optional):** tag scans are forwarded, and tags registered in
-  Homeplanarr complete their chore.
+  Homeplanarr complete their chore. Turning it on adds two steps: pick the chore
+  each of Home Assistant's tags (*Settings → Tags*) completes, saved straight to
+  Homeplanarr's tags, and pick which household member each Home Assistant user
+  is. A tag scanned with someone's phone then gives that member the points.
 
 **Homeplanarr → Home Assistant**
 
@@ -49,7 +52,8 @@ vehicle's unit (km or Swedish mil). Add the vehicle under *Vehicles* in
 Homeplanarr first.
 
 **Action** `homeplanarr.complete_chore` marks a chore as done for a member, by
-name or id, for buttons, voice assistants and automations.
+name or id, for buttons, voice assistants and automations. Without a member it
+credits the member paired with the Home Assistant user who runs it.
 
 ## Install
 

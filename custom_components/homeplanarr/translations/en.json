@@ -34,7 +34,7 @@
           "level_entities": "The current value is sent once an hour. The entity's area is matched to a room with the same name.",
           "battery_entities": "Shown under Integrations with a low-battery warning.",
           "odometer_entities": "If your car is in Home Assistant, pick its odometer sensor. Next you pick which vehicle in Homeplanarr it belongs to; the reading goes to the vehicle's log once a day.",
-          "forward_tags": "Tags registered in Homeplanarr complete their chore. Other tags are ignored.",
+          "forward_tags": "Tags registered in Homeplanarr complete their chore. Next you can link Home Assistant's tags to chores and Home Assistant's users to household members.",
           "shopping_list": "Pick a to-do list you already use, such as Shopping list or Google Keep, and Homeplanarr's shopping list is kept in step with it instead of adding a list of its own. Items already on it are added to Homeplanarr. Leave empty for Homeplanarr's own list."
         }
       },
@@ -48,6 +48,14 @@
       "vehicles": {
         "title": "Which vehicle?",
         "description": "Pick the vehicle in Homeplanarr each odometer belongs to. Add vehicles under Vehicles in Homeplanarr."
+      },
+      "tags": {
+        "title": "Which chore does each tag complete?",
+        "description": "Your tags in Home Assistant (Settings → Tags). Pick the chore a scan completes, or — for none. The links are saved in Homeplanarr under Chores & NFC."
+      },
+      "members": {
+        "title": "Who is who?",
+        "description": "Pick the household member each Home Assistant user is. A tag scanned with that person's phone gives them the points; with — the tag's own member in Homeplanarr gets them."
       }
     },
     "error": {
@@ -86,13 +94,21 @@
           "level_entities": "The current value is sent once an hour. The entity's area is matched to a room with the same name.",
           "battery_entities": "Shown under Integrations with a low-battery warning.",
           "odometer_entities": "If your car is in Home Assistant, pick its odometer sensor. Next you pick which vehicle in Homeplanarr it belongs to; the reading goes to the vehicle's log once a day.",
-          "forward_tags": "Tags registered in Homeplanarr complete their chore. Other tags are ignored.",
+          "forward_tags": "Tags registered in Homeplanarr complete their chore. Next you can link Home Assistant's tags to chores and Home Assistant's users to household members.",
           "shopping_list": "Pick a to-do list you already use, such as Shopping list or Google Keep, and Homeplanarr's shopping list is kept in step with it instead of adding a list of its own. Items already on it are added to Homeplanarr. Leave empty for Homeplanarr's own list."
         }
       },
       "vehicles": {
         "title": "Which vehicle?",
         "description": "Pick the vehicle in Homeplanarr each odometer belongs to. Add vehicles under Vehicles in Homeplanarr."
+      },
+      "tags": {
+        "title": "Which chore does each tag complete?",
+        "description": "Your tags in Home Assistant (Settings → Tags). Pick the chore a scan completes, or — for none. The links are saved in Homeplanarr under Chores & NFC."
+      },
+      "members": {
+        "title": "Who is who?",
+        "description": "Pick the household member each Home Assistant user is. A tag scanned with that person's phone gives them the points; with — the tag's own member in Homeplanarr gets them."
       }
     },
     "error": {
@@ -174,7 +190,7 @@
         },
         "member": {
           "name": "Member",
-          "description": "Member name or id."
+          "description": "Member name or id. Leave empty for the member paired with the Home Assistant user who runs the action."
         },
         "comment": {
           "name": "Comment",
