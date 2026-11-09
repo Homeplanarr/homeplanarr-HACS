@@ -18,6 +18,11 @@ CONF_SHOPPING_LIST = "shopping_list"
 # ({entity_id: vehicle id as a string}).
 CONF_ODOMETER_ENTITIES = "odometer_entities"
 CONF_ODOMETERS = "odometers"
+# Home Assistant users -> household members ({HA user id: member id as a
+# string}), so a tag scan is credited to whoever scanned it.
+CONF_MEMBERS = "members"
+# "No chore" / "nobody" in the mapping pickers
+UNMAPPED = "0"
 
 DEFAULT_ENERGY_INTERVAL = "15"
 ENERGY_INTERVALS = ["15", "60"]

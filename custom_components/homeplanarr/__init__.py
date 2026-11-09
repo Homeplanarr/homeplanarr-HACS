@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .api import HomeplanarrApi, HomeplanarrError
-from .const import CONF_SHOPPING_LIST, DOMAIN, SERVICE_COMPLETE_CHORE
+from .const import CONF_MEMBERS, CONF_SHOPPING_LIST, DOMAIN, SERVICE_COMPLETE_CHORE
 from .coordinator import HomeplanarrCoordinator, ShoppingCoordinator
 from .pusher import Pusher
 from .shopping_mirror import ShoppingMirror, store_for
@@ -31,7 +31,7 @@ ATTR_CONFIG_ENTRY = "config_entry_id"
 COMPLETE_CHORE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CHORE): cv.string,
-        vol.Required(ATTR_MEMBER): cv.string,
+        vol.Optional(ATTR_MEMBER): cv.string,
         vol.Optional(ATTR_COMMENT): cv.string,
         vol.Optional(ATTR_CONFIG_ENTRY): cv.string,
     }
@@ -61,10 +61,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not entries:
             raise ServiceValidationError("Homeplanarr is not set up")
         entry: HomeplanarrConfigEntry = entries[0]
+        member = call.data.get(ATTR_MEMBER) or await _caller(hass, entry, call)
+        if not member:
+            raise ServiceValidationError("Name the member who did the chore")
         try:
             result = await entry.runtime_data.api.chore_event(
                 call.data[ATTR_CHORE],
-                call.data[ATTR_MEMBER],
+                member,
                 call.data.get(ATTR_COMMENT) or "via Home Assistant",
             )
         except HomeplanarrError as err:
@@ -80,6 +83,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.OPTIONAL,
     )
     return True
+
+
+async def _caller(
+    hass: HomeAssistant, entry: HomeplanarrConfigEntry, call: ServiceCall
+) -> str | None:
+    """The member for the HA user who called the action: the one paired under
+    Configure, else the HA user's own name."""
+    if not (user_id := call.context.user_id):
+        return None
+    if member := (entry.options.get(CONF_MEMBERS) or {}).get(user_id):
+        return str(member)
+    user = await hass.auth.async_get_user(user_id)
+    return user.name if user else None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeplanarrConfigEntry) -> bool:

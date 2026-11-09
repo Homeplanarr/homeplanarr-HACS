@@ -98,6 +98,26 @@ class HomeplanarrApi:
             body["comment"] = comment
         return await self._request("POST", f"{HA_PREFIX}/chore-event", body)
 
+    # Mapping HA's tags and people to chores and members (config flow).
+
+    async def chores(self) -> list[dict[str, Any]]:
+        rows = await self._request("GET", f"{API_PREFIX}/chores?limit=500")
+        return [r for r in rows or [] if r.get("active", True)]
+
+    async def members(self) -> list[dict[str, Any]]:
+        return await self._request("GET", f"{API_PREFIX}/members") or []
+
+    async def nfc_tags(self) -> list[dict[str, Any]]:
+        return await self._request("GET", f"{API_PREFIX}/nfc/tags") or []
+
+    async def nfc_tag_create(self, tag_id: str, name: str, chore_id: int) -> Any:
+        return await self._request(
+            "POST", f"{API_PREFIX}/nfc/tags", {"tag_id": tag_id, "name": name, "chore_id": chore_id}
+        )
+
+    async def nfc_tag_update(self, tag: int, changes: dict[str, Any]) -> Any:
+        return await self._request("PATCH", f"{API_PREFIX}/nfc/tags/{tag}", changes)
+
     async def nfc_scan(self, tag_id: str, member: str | None) -> Any:
         body: dict[str, Any] = {"tag_id": tag_id}
         if member:

@@ -6,7 +6,7 @@ complete_chore:
       selector:
         text:
     member:
-      required: true
+      required: false
       example: "Alice"
       selector:
         text:

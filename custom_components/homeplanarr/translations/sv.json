@@ -34,7 +34,7 @@
           "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
           "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
           "odometer_entities": "Om bilen finns i Home Assistant, välj dess mätarställningssensor. Sedan väljer du vilket fordon i Homeplanarr den hör till; värdet hamnar i fordonets logg en gång om dagen.",
-          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras.",
+          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Sedan kan du koppla Home Assistants taggar till sysslor och Home Assistants användare till hushållets medlemmar.",
           "shopping_list": "Välj en att göra-lista du redan använder, till exempel Inköpslista eller Google Keep, så hålls Homeplanarrs inköpslista i takt med den i stället för att en egen lista läggs till. Det som redan står på den läggs till i Homeplanarr. Lämna tomt för Homeplanarrs egen lista."
         }
       },
@@ -48,6 +48,14 @@
       "vehicles": {
         "title": "Vilket fordon?",
         "description": "Välj vilket fordon i Homeplanarr varje mätarställning hör till. Fordon läggs till under Fordon i Homeplanarr."
+      },
+      "tags": {
+        "title": "Vilken syssla bockar varje tagg av?",
+        "description": "Dina taggar i Home Assistant (Inställningar → Taggar). Välj sysslan en skanning bockar av, eller — för ingen. Kopplingarna sparas i Homeplanarr under Sysslor & NFC."
+      },
+      "members": {
+        "title": "Vem är vem?",
+        "description": "Välj vilken medlem i hushållet varje användare i Home Assistant är. En tagg som skannas med den personens telefon ger poängen till hen; med — får taggens egen medlem i Homeplanarr dem."
       }
     },
     "error": {
@@ -86,13 +94,21 @@
           "level_entities": "Aktuellt värde skickas en gång i timmen. Entitetens område matchas mot ett rum med samma namn.",
           "battery_entities": "Visas under Integrationer med varning vid lågt batteri.",
           "odometer_entities": "Om bilen finns i Home Assistant, välj dess mätarställningssensor. Sedan väljer du vilket fordon i Homeplanarr den hör till; värdet hamnar i fordonets logg en gång om dagen.",
-          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Andra taggar ignoreras.",
+          "forward_tags": "Taggar som är registrerade i Homeplanarr bockar av sin syssla. Sedan kan du koppla Home Assistants taggar till sysslor och Home Assistants användare till hushållets medlemmar.",
           "shopping_list": "Välj en att göra-lista du redan använder, till exempel Inköpslista eller Google Keep, så hålls Homeplanarrs inköpslista i takt med den i stället för att en egen lista läggs till. Det som redan står på den läggs till i Homeplanarr. Lämna tomt för Homeplanarrs egen lista."
         }
       },
       "vehicles": {
         "title": "Vilket fordon?",
         "description": "Välj vilket fordon i Homeplanarr varje mätarställning hör till. Fordon läggs till under Fordon i Homeplanarr."
+      },
+      "tags": {
+        "title": "Vilken syssla bockar varje tagg av?",
+        "description": "Dina taggar i Home Assistant (Inställningar → Taggar). Välj sysslan en skanning bockar av, eller — för ingen. Kopplingarna sparas i Homeplanarr under Sysslor & NFC."
+      },
+      "members": {
+        "title": "Vem är vem?",
+        "description": "Välj vilken medlem i hushållet varje användare i Home Assistant är. En tagg som skannas med den personens telefon ger poängen till hen; med — får taggens egen medlem i Homeplanarr dem."
       }
     },
     "error": {
@@ -174,7 +190,7 @@
         },
         "member": {
           "name": "Medlem",
-          "description": "Medlemmens namn eller id."
+          "description": "Medlemmens namn eller id. Lämna tomt för medlemmen som är kopplad till användaren i Home Assistant som kör åtgärden."
         },
         "comment": {
           "name": "Kommentar",

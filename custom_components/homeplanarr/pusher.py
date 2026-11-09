@@ -44,6 +44,7 @@ from .const import (
     CONF_ENERGY_ENTITIES,
     CONF_ENERGY_INTERVAL,
     CONF_FORWARD_TAGS,
+    CONF_MEMBERS,
     CONF_LEVEL_ENTITIES,
     CONF_ODOMETER_ENTITIES,
     CONF_ODOMETERS,
@@ -525,9 +526,13 @@ class Pusher:
         if not tag_id:
             return
         member = None
-        if event.context.user_id:
-            user = await self.hass.auth.async_get_user(event.context.user_id)
-            member = user.name if user else None
+        if user_id := event.context.user_id:
+            # the member paired with this HA user under Configure, else a
+            # member with the same name as the HA user
+            member = (self.options.get(CONF_MEMBERS) or {}).get(user_id)
+            if member is None:
+                user = await self.hass.auth.async_get_user(user_id)
+                member = user.name if user else None
         try:
             try:
                 await self.api.nfc_scan(str(tag_id), member)
